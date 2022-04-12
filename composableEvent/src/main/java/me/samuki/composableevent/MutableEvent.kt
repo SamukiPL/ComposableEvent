@@ -5,20 +5,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.StateObject
 import androidx.compose.runtime.snapshots.StateRecord
 import androidx.compose.runtime.snapshots.readable
-import androidx.compose.runtime.snapshots.withCurrent
 import androidx.compose.runtime.snapshots.writable
 import kotlinx.coroutines.CoroutineScope
 
 fun <T> mutableEventOf() = MutableEvent<T>()
 
-class MutableEvent<T> internal constructor(): Event<T>, StateObject {
+class MutableEvent<T> internal constructor() : Event<T>, StateObject {
 
-    private var value: EventCartridge<T>
+    private var cartridge: EventCartridge<T>
         get() = next.readable(this).value
-        set(value) = next.withCurrent {
-            next.writable(this) {
-                this.value = value
-            }
+        set(value) = next.writable(this) {
+            this.value = value
         }
 
     private var next: EventRecord<T> = EventRecord()
@@ -31,8 +28,9 @@ class MutableEvent<T> internal constructor(): Event<T>, StateObject {
         next = value as EventRecord<T>
     }
 
-    private fun resetRecord() {
+    private fun resetRecord(): StateRecord {
         prependStateRecord(EventRecord<T>())
+        return firstStateRecord
     }
 
     @Composable
@@ -40,10 +38,10 @@ class MutableEvent<T> internal constructor(): Event<T>, StateObject {
         remember(Unit) {
             resetRecord()
         }
-        LaunchedEvent(value, block)
+        LaunchedEvent(cartridge, block)
     }
 
     fun sendEvent(event: T) {
-        this.value = EventCartridge(event)
+        this.cartridge = EventCartridge(event)
     }
 }
