@@ -7,8 +7,11 @@ import androidx.compose.runtime.snapshots.StateRecord
 import androidx.compose.runtime.snapshots.readable
 import androidx.compose.runtime.snapshots.writable
 import kotlinx.coroutines.CoroutineScope
+import kotlin.reflect.KProperty
 
 fun <T> mutableEventOf() = MutableEvent<T>()
+
+operator fun <T> MutableEvent<T>.getValue(thisRef: Any?, property: KProperty<*>): Event<T> = this
 
 class MutableEvent<T> internal constructor() : Event<T>, StateObject {
 
